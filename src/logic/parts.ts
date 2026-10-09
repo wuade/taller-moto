@@ -28,6 +28,15 @@ export function unmountedParts(state: AppState, parts: Part[] = PARTS): Part[] {
   return parts.filter((part) => purchasesOf(state, part)[0]?.mounted === false);
 }
 
+/** Lo comprado para un trabajo que aún no se ha montado. Ya cuenta en Gastos: al hacer el trabajo no se vuelve a apuntar. */
+export function unmountedPurchases(state: AppState, taskId: string, parts: Part[] = PARTS): Expense[] {
+  return parts
+    .filter((part) => part.taskId === taskId)
+    .flatMap((part) => purchasesOf(state, part))
+    .filter((purchase) => purchase.mounted === false)
+    .map((purchase) => purchase.expense);
+}
+
 export type PartGroup = { title: string; parts: Part[] };
 
 /** Recambios por grupo, en el orden de la lista. */

@@ -6,7 +6,8 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { TASKS, type LogEntry } from '../../data/eliminator500';
 import { costOfEntry } from '../../logic/expenses';
 import { formatDate, formatKm } from '../../logic/format';
-import { formatEuros, parseEuros } from '../../logic/money';
+import { formatEuros, parseEuros, sumEuros } from '../../logic/money';
+import { unmountedPurchases } from '../../logic/parts';
 import { describeInterval, isPendingMount, lastEntry, taskStatus } from '../../logic/status';
 import { useStore } from '../../store/StoreProvider';
 import {
@@ -52,6 +53,8 @@ export default function TaskScreen() {
   const last = lastEntry(entries);
   const history = [...entries].reverse();
   const doneToday = last?.km === state.km;
+  // Lo comprado para este trabajo ya está en Gastos: al marcarlo hecho solo falta lo que cueste hacerlo.
+  const bought = sumEuros(unmountedPurchases(state, task.id).map((e) => e.amount));
 
   return (
     <Screen>
@@ -105,11 +108,15 @@ export default function TaskScreen() {
 
       {doneToday ? null : (
         <View style={{ gap: 8 }}>
-          <Text style={{ color: c.muted, fontSize: 13 }}>Lo que costó y dónde se hizo (opcional)</Text>
+          <Text style={{ color: c.muted, fontSize: 13 }}>
+            {bought > 0
+              ? `Lo que compraste para esto ya está en Gastos (${formatEuros(bought)}). Apunta aquí solo la mano de obra y dónde se hizo (opcional).`
+              : 'Lo que costó y dónde se hizo (opcional)'}
+          </Text>
           <View style={styles.costRow}>
             <TextInput
-              accessibilityLabel="Lo que costó, en euros"
-              placeholder="Coste €"
+              accessibilityLabel={bought > 0 ? 'Mano de obra, en euros' : 'Lo que costó, en euros'}
+              placeholder={bought > 0 ? 'Mano de obra €' : 'Coste €'}
               placeholderTextColor={c.muted}
               keyboardType="decimal-pad"
               value={cost}

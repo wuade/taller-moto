@@ -1,7 +1,7 @@
 import { PARTS, TASKS } from '../../data/eliminator500';
 import { parseBackup, serializeBackup } from '../backup';
 import { addExpense } from '../expenses';
-import { partGroups, purchasesOf, unmountedParts } from '../parts';
+import { partGroups, purchasesOf, unmountedParts, unmountedPurchases } from '../parts';
 import { type AppState, addEntry, seedState } from '../state';
 
 const NOW = new Date('2026-10-12T10:00:00.000Z');
@@ -46,6 +46,20 @@ describe('recambios', () => {
     const state = buy(seedState(), 'bateria', '2026-10-01', 75);
     expect(purchasesOf(state, part('bateria'))[0].mounted).toBeNull();
     expect(unmountedParts(state)).toEqual([]);
+  });
+
+  it('al hacer un trabajo se sabe lo que ya se compró para él, hasta que se monta', () => {
+    let state = buy(seedState(), 'cadena', '2026-08-06', 80);
+    state = buy(state, 'corona', '2026-08-06', 30);
+    state = buy(state, 'bujia', '2026-08-06', 20);
+    expect(unmountedPurchases(state, 'arrastre').map((e) => e.partId).sort()).toEqual(['cadena', 'corona']);
+    expect(unmountedPurchases(state, 'neumaticos')).toEqual([]);
+
+    state = addEntry({ ...state, km: 12100 }, 'arrastre', { km: 12100, date: '2026-10-20' }, NOW);
+    expect(unmountedPurchases(state, 'arrastre')).toEqual([]);
+    // Una compra nueva después de montar vuelve a contar.
+    state = buy(state, 'cadena', '2026-11-02', 85);
+    expect(unmountedPurchases(state, 'arrastre').map((e) => e.date)).toEqual(['2026-11-02']);
   });
 
   it('la compra más reciente va primero', () => {
