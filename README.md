@@ -19,7 +19,7 @@ Los datos se guardan en el iPhone, dentro de la app. Si borras el icono, se borr
 
 ## Instalar en Android
 
-1. En el móvil, abre [la última versión](https://github.com/wuade/taller-moto/releases/latest). El repositorio es privado: inicia sesión en GitHub en el navegador.
+1. En el móvil, abre [la última versión](https://github.com/wuade/taller-moto/releases/latest).
 2. Descarga `taller-moto.apk` y ábrelo. Android pedirá permiso para instalar apps desde el navegador; acéptalo para esta instalación.
 3. Para actualizar, instala el APK nuevo encima del anterior: se conservan los datos. No desinstales la app antes, porque eso sí borra los datos del móvil.
 
