@@ -20,6 +20,8 @@ App para planificar y apuntar el mantenimiento de una Kawasaki Eliminator 500 SE
 
 Los datos se guardan en el iPhone, dentro de la app. Si borras el icono, se borran con él: haz una copia de seguridad antes.
 
+Las versiones nuevas se ponen solas al abrir la app. Si en ese momento estás usándola, sale un aviso y se pone la próxima vez que vuelvas a ella.
+
 ## Instalar en Android
 
 1. En el móvil, abre [la última versión](https://github.com/wuade/taller-moto/releases/latest).

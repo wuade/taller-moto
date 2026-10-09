@@ -92,7 +92,10 @@ export const TORQUES = {
     part: 'Bujías NGK LMAR9G',
     nm: 13,
     conf: 'probable',
-    src: 'Foro ninja400riders.com (usuario con el manual de la Ninja 400)',
+    src:
+      'Manual de servicio de la Ninja 400, citado en el foro ninja400riders.com. La Z500 y la Ninja 500 de 2024 ' +
+      'llevan la misma bujía (maintenanceschedule.com). NGK, para bujías de rosca de 10 mm con arandela en culata ' +
+      'de aluminio: 10-12 N·m (ngksparkplugs.com).',
   },
   levas: { part: 'Tapas de árbol de levas', nm: 12, conf: 'cita', src: `${SM_QUOTE} (22/07/2026). Secuencia 1-12` },
   tapasMotor: { part: 'Tapas de embrague y alternador (M6)', nm: 9.8, conf: 'cita', src: `${SM_QUOTE} (28/06/2026)` },
