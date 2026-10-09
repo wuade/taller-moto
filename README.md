@@ -11,6 +11,7 @@ App para planificar y apuntar el mantenimiento de una Kawasaki Eliminator 500 SE
 - **Recambios**: referencias de Kawasaki y equivalentes de cada recambio y consumible. Lo que compras se apunta en su recambio, va también a Gastos y queda «sin montar» hasta que marcas el trabajo como hecho.
 - **Gastos**: apunta lo que cuesta cada trabajo al marcarlo como hecho, o cualquier otro gasto de la moto, y ve el total de cada año.
 - **Exportar a Excel**: un `.xlsx` con gastos, trabajos hechos, lo que toca, recambios y pares de apriete, para verlo en el PC. Es una foto: no sirve para recuperar datos.
+- **Historial en PDF**: los trabajos hechos con fecha, km y taller, los recambios comprados y lo próximo que toca, para enseñarlo si vendes la moto. No lleva importes. Está en Copia de seguridad.
 - **Copia de seguridad**: exporta un archivo `.json` y guárdalo en Google Drive. Al importarlo se une con lo que hay en el móvil y no se borra nada. Si no tienes ninguna copia, o la última tiene una semana y hay cambios sin copia, la pantalla de inicio te avisa.
 
 ## Instalar en iPhone

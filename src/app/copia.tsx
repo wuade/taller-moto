@@ -7,6 +7,7 @@ import { formatDate } from '../logic/format';
 import { useStore } from '../store/StoreProvider';
 import { Body, Button, Card, Eyebrow, Heading, Notice, Screen } from '../ui/components';
 import { ExcelExport } from '../ui/ExcelExport';
+import { HistoryExport } from '../ui/HistoryExport';
 import { useColors } from '../ui/theme';
 
 type Message = { tone: 'ok' | 'error'; text: string };
@@ -99,6 +100,8 @@ export default function BackupScreen() {
       </Card>
 
       <ExcelExport />
+
+      <HistoryExport />
 
       {message ? (
         message.tone === 'error' ? (

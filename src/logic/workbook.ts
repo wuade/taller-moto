@@ -1,10 +1,10 @@
 import { BIKE, CONFIDENCE, PARTS, TASKS, TORQUE_GROUPS, TORQUES, type TorqueKey } from '../data/eliminator500';
 import { costOfEntry, spendingByYear } from './expenses';
 import { todayIso } from './format';
+import { plan } from './history';
 import { sumEuros } from './money';
 import { purchasesOf } from './parts';
 import type { AppState } from './state';
-import { compareStatus, describeInterval, isPendingMount, taskStatus } from './status';
 import type { Cell, Sheet } from './xlsx';
 
 // El Excel que se exporta para ver los datos en el PC. Es una foto: no se vuelve a importar.
@@ -60,18 +60,8 @@ function jobs(state: AppState): Sheet {
   };
 }
 
-function plan(state: AppState, now: Date): Sheet {
-  const rows = TASKS.map((task) => {
-    const entries = state.log[task.id];
-    return { task, pending: isPendingMount(task, entries), status: taskStatus(task, entries, state.km, now) };
-  })
-    .sort((a, b) => Number(b.pending) - Number(a.pending) || compareStatus(a.status, b.status))
-    .map(({ task, pending, status }): Cell[] => [
-      task.name,
-      pending ? 'Montar' : status.label,
-      pending ? (task.pending ?? '') : status.detail,
-      describeInterval(task),
-    ]);
+function planSheet(state: AppState, now: Date): Sheet {
+  const rows = plan(state, now).map((row): Cell[] => [row.name, row.status, row.detail, row.interval]);
   return { name: 'Qué toca', widths: [30, 14, 44, 24], header: ['Trabajo', 'Estado', 'Detalle', 'Intervalo'], rows };
 }
 
@@ -120,7 +110,7 @@ function torques(state: AppState): Sheet {
 }
 
 export function buildWorkbook(state: AppState, now: Date): Sheet[] {
-  return [summary(state, now), expenses(state), jobs(state), plan(state, now), parts(state), torques(state)];
+  return [summary(state, now), expenses(state), jobs(state), planSheet(state, now), parts(state), torques(state)];
 }
 
 export function workbookFileName(now: Date): string {
