@@ -336,6 +336,7 @@ export const TASKS: Task[] = [
 /** Estado de partida, sacado del historial del Excel a 09/10/2026. */
 export const SEED = {
   km: 11818,
+  kmDate: '2026-10-09',
   log: {
     bujias: [{ km: 0, date: '2025-04-08' }],
     neumaticos: [{ km: 0, date: '2025-04-08' }],

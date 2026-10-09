@@ -68,7 +68,11 @@ export function StoreProvider({ children, fallback }: { children: ReactNode; fal
     return {
       state,
       saveError,
-      setKm: (km) => update((s) => ({ ...s, km, updated: new Date().toISOString() })),
+      setKm: (km) =>
+        update((s) => {
+          const now = new Date();
+          return { ...s, km, kmDate: todayIso(now), updated: now.toISOString() };
+        }),
       markDone: (taskId) =>
         update((s) => {
           const now = new Date();

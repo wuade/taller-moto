@@ -1,27 +1,54 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import { ActivityIndicator, Platform, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Platform, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { StoreProvider } from '../store/StoreProvider';
+import { Button } from '../ui/components';
 import { useColors } from '../ui/theme';
 
-/** En la versión web, el service worker guarda la app para abrirla sin cobertura. */
-function useOfflineWeb() {
+/**
+ * En la versión web, el service worker guarda la app para abrirla sin cobertura.
+ * Devuelve true cuando se ha descargado una versión nueva y basta con recargar para usarla.
+ */
+function useOfflineWeb(): boolean {
+  const [updateReady, setUpdateReady] = useState(false);
   useEffect(() => {
     if (Platform.OS !== 'web' || __DEV__ || !('serviceWorker' in navigator)) return;
     const base = process.env.EXPO_BASE_URL ?? '';
+    // La primera vez no había service worker: su llegada no es una versión nueva.
+    const hadController = Boolean(navigator.serviceWorker.controller);
+    const onControllerChange = () => {
+      if (hadController) setUpdateReady(true);
+    };
+    navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
     navigator.serviceWorker.register(`${base}/sw.js`, { scope: `${base}/` }).catch(() => {
       // Sin service worker la app sigue funcionando con conexión.
     });
     // Pide que el navegador no borre los datos guardados cuando le falte espacio.
     navigator.storage?.persist?.().catch(() => {});
+    return () => navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
   }, []);
+  return updateReady;
+}
+
+function UpdateBar() {
+  const c = useColors();
+  const insets = useSafeAreaInsets();
+  return (
+    <View
+      style={[styles.updateBar, { backgroundColor: c.surface, borderColor: c.line, bottom: 12 + insets.bottom }]}
+    >
+      <Text style={{ color: c.ink, fontSize: 15, flex: 1 }}>Hay una versión nueva de la app.</Text>
+      <Button small label="Actualizar" onPress={() => window.location.reload()} />
+    </View>
+  );
 }
 
 export default function RootLayout() {
   const c = useColors();
-  useOfflineWeb();
+  const updateReady = useOfflineWeb();
   return (
     <StoreProvider
       fallback={
@@ -42,8 +69,24 @@ export default function RootLayout() {
         <Stack.Screen name="index" options={{ title: 'Taller' }} />
         <Stack.Screen name="tarea/[id]" options={{ title: 'Tarea' }} />
         <Stack.Screen name="pares" options={{ title: 'Pares de apriete' }} />
+        <Stack.Screen name="avisos" options={{ title: 'Avisos' }} />
         <Stack.Screen name="copia" options={{ title: 'Copia de seguridad' }} />
       </Stack>
+      {updateReady ? <UpdateBar /> : null}
     </StoreProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  updateBar: {
+    position: 'absolute',
+    left: 12,
+    right: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderRadius: 12,
+  },
+});

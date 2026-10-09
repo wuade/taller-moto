@@ -5,6 +5,8 @@ export type TorqueOverride = { nm: number; source: string; date: string };
 
 export type AppState = {
   km: number;
+  /** Día en que se apuntaron esos km, "AAAA-MM-DD". Sirve para estimar los km al día. */
+  kmDate?: string;
   log: Record<string, LogEntry[]>;
   overrides: Partial<Record<TorqueKey, TorqueOverride>>;
   /** Último cambio de datos (ISO). */
@@ -16,6 +18,7 @@ export type AppState = {
 export function seedState(): AppState {
   return {
     km: SEED.km,
+    kmDate: SEED.kmDate,
     log: structuredCloneLog(SEED.log),
     overrides: {},
     updated: '2026-10-09T00:00:00.000Z',
@@ -52,8 +55,14 @@ export function mergeStates(local: AppState, incoming: AppState): AppState {
     const current = overrides[key];
     if (!current || value.date > current.date) overrides[key] = value;
   }
+  // La lectura de km que gana es la más alta; con los mismos km, la apuntada más tarde.
+  const reading =
+    incoming.km > local.km || (incoming.km === local.km && (incoming.kmDate ?? '') > (local.kmDate ?? ''))
+      ? incoming
+      : local;
   return {
-    km: Math.max(local.km, incoming.km),
+    km: reading.km,
+    kmDate: reading.kmDate,
     log: mergeLogs(local.log, incoming.log),
     overrides,
     updated: local.updated > incoming.updated ? local.updated : incoming.updated,

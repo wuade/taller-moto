@@ -1,28 +1,11 @@
 import * as DocumentPicker from 'expo-document-picker';
 
-export type ExportResult = 'shared' | 'downloaded' | 'cancelled' | 'unavailable';
+import { type ShareResult, shareFile } from './share-file';
 
-/** En el navegador: menú de compartir del sistema si admite archivos (iPhone), si no, descarga. */
-export async function exportBackup(fileName: string, json: string): Promise<ExportResult> {
-  const file = new File([json], fileName, { type: 'application/json' });
-  if (typeof navigator !== 'undefined' && navigator.canShare?.({ files: [file] })) {
-    try {
-      await navigator.share({ files: [file], title: 'Copia de Taller Moto' });
-      return 'shared';
-    } catch (error) {
-      // El usuario cerró el menú: no es un error.
-      if (error instanceof Error && error.name === 'AbortError') return 'cancelled';
-    }
-  }
-  const url = URL.createObjectURL(file);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-  return 'downloaded';
+export type ExportResult = ShareResult;
+
+export function exportBackup(fileName: string, json: string): Promise<ExportResult> {
+  return shareFile(fileName, json, { mimeType: 'application/json', uti: 'public.json', title: 'Copia de Taller Moto' });
 }
 
 export async function pickBackupText(): Promise<string | null> {

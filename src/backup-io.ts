@@ -1,22 +1,13 @@
 import * as DocumentPicker from 'expo-document-picker';
-import { File, Paths } from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
+import { File } from 'expo-file-system';
 
-export type ExportResult = 'shared' | 'downloaded' | 'cancelled' | 'unavailable';
+import { type ShareResult, shareFile } from './share-file';
 
-/** Escribe la copia en la caché y abre el menú de compartir (Drive, correo, WhatsApp...). */
-export async function exportBackup(fileName: string, json: string): Promise<ExportResult> {
-  const file = new File(Paths.cache, fileName);
-  if (file.exists) file.delete();
-  file.create();
-  file.write(json);
-  if (!(await Sharing.isAvailableAsync())) return 'unavailable';
-  await Sharing.shareAsync(file.uri, {
-    mimeType: 'application/json',
-    UTI: 'public.json',
-    dialogTitle: 'Guardar copia de Taller Moto',
-  });
-  return 'shared';
+export type ExportResult = ShareResult;
+
+/** Abre el menú de compartir con la copia (Drive, correo, WhatsApp...). */
+export function exportBackup(fileName: string, json: string): Promise<ExportResult> {
+  return shareFile(fileName, json, { mimeType: 'application/json', uti: 'public.json', title: 'Guardar copia de Taller Moto' });
 }
 
 /** Deja elegir un archivo de copia y devuelve su texto, o null si se cancela. */

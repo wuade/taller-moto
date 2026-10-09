@@ -26,7 +26,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const WARN_DAYS = 30;
 
 /** "AAAA-MM-DD" (o ISO) a medianoche UTC. */
-function parseDay(iso: string): number {
+export function parseDay(iso: string): number {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
   if (!m) return NaN;
   return Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]));

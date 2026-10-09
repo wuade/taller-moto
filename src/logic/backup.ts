@@ -85,6 +85,7 @@ export function parseBackup(text: string): AppState {
   if (!isKm(data.km)) throw new BackupError('La copia no tiene unos kilómetros válidos.');
   return {
     km: Math.round(data.km),
+    kmDate: isDay(data.kmDate) ? data.kmDate.slice(0, 10) : undefined,
     log: parseLog(data.log),
     overrides: parseOverrides(data.overrides),
     updated: typeof data.updated === 'string' ? data.updated : new Date(0).toISOString(),

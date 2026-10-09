@@ -119,6 +119,7 @@ export default function Home() {
 
       <View style={{ gap: 8 }}>
         <Button kind="ghost" label="Pares de apriete" onPress={() => router.push('/pares')} />
+        <Button kind="ghost" label="Avisos en el Calendario" onPress={() => router.push('/avisos')} />
         <Button
           kind="ghost"
           label={needsBackup ? 'Copia de seguridad · cambios sin copia' : 'Copia de seguridad'}
