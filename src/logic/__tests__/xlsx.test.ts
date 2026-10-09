@@ -54,22 +54,25 @@ describe('Excel de Taller Moto', () => {
   state = addEntry(state, 'aceite', { km: 15500, date: '2027-03-01' }, NOW);
   state = expense({ date: '2027-03-01', amount: 40.5, concept: 'Aceite', taskId: 'aceite', km: 15500 })(state);
   state = expense({ date: '2026-09-27', amount: 100, concept: 'Kit <A&B> "C"', place: 'Tienda' })(state);
+  state = expense({ date: '2026-09-15', amount: 21.5, concept: 'Filtro de aire', place: 'Tienda', partId: 'filtroAire' })(
+    state,
+  );
   const files = unzip(buildXlsx(buildWorkbook(state, NOW), NOW));
 
-  it('lleva todas las piezas de un .xlsx y las cinco hojas', () => {
+  it('lleva todas las piezas de un .xlsx y las seis hojas', () => {
     for (const name of ['[Content_Types].xml', '_rels/.rels', 'xl/workbook.xml', 'xl/styles.xml']) {
       expect(files.has(name)).toBe(true);
     }
     const names = [...(files.get('xl/workbook.xml') ?? '').matchAll(/<sheet name="([^"]+)"/g)].map((m) => m[1]);
-    expect(names).toEqual(['Resumen', 'Gastos', 'Trabajos hechos', 'Qué toca', 'Pares de apriete']);
-    for (let i = 1; i <= 5; i++) expect(files.has(`xl/worksheets/sheet${i}.xml`)).toBe(true);
+    expect(names).toEqual(['Resumen', 'Gastos', 'Trabajos hechos', 'Qué toca', 'Recambios', 'Pares de apriete']);
+    for (let i = 1; i <= 6; i++) expect(files.has(`xl/worksheets/sheet${i}.xml`)).toBe(true);
   });
 
   it('gastos: fechas de Excel, texto escapado y fila de total', () => {
     const sheet = files.get('xl/worksheets/sheet2.xml') ?? '';
     expect(sheet).toContain('Kit &lt;A&amp;B&gt; &quot;C&quot;');
     expect(sheet).toContain(`<v>${excelDate('2026-09-27')}</v>`);
-    expect(sheet).toContain('<f>SUM(E2:E3)</f><v>140.5</v>');
+    expect(sheet).toContain('<f>SUM(E2:E4)</f><v>162</v>');
   });
 
   it('trabajos hechos: el coste aparece junto al trabajo', () => {
@@ -78,8 +81,14 @@ describe('Excel de Taller Moto', () => {
     expect(sheet).toContain('Punto de partida (de fábrica)');
   });
 
-  it('pares: los que no tienen dato salen como «Sin dato», nunca con un número', () => {
+  it('recambios: referencia y última compra, sin montar si su trabajo no se ha hecho', () => {
     const sheet = files.get('xl/worksheets/sheet5.xml') ?? '';
+    expect(sheet).toContain('16097-0008');
+    expect(sheet).toMatch(/Filtro de aire.*11013-0808.*<v>21.5<\/v>.*Sin montar/);
+  });
+
+  it('pares: los que no tienen dato salen como «Sin dato», nunca con un número', () => {
+    const sheet = files.get('xl/worksheets/sheet6.xml') ?? '';
     expect(sheet).toMatch(/Tornillos de discos de freno.*?Sin dato/);
   });
 

@@ -120,6 +120,7 @@ export default function RootLayout() {
         <Stack.Screen name="pares" options={{ title: 'Pares de apriete' }} />
         <Stack.Screen name="avisos" options={{ title: 'Avisos' }} />
         <Stack.Screen name="gastos" options={{ title: 'Gastos' }} />
+        <Stack.Screen name="recambios" options={{ title: 'Recambios' }} />
         <Stack.Screen name="copia" options={{ title: 'Copia de seguridad' }} />
       </Stack>
       {updateReady ? <UpdateBar /> : null}

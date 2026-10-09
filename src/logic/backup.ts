@@ -4,7 +4,9 @@ import { roundCents } from './money';
 import { type AppState, type TorqueOverride, isTorqueKey } from './state';
 
 const APP_ID = 'taller-moto';
-const FORMAT = 1;
+// 2: los gastos pueden llevar su recambio (partId). Una app de formato 1 rechaza estas copias en vez de
+// importarlas sin ese dato.
+const FORMAT = 2;
 
 export class BackupError extends Error {}
 
@@ -65,6 +67,7 @@ function parseExpenses(raw: unknown): Expense[] {
     }
     const place = text(e.place, 80);
     const taskId = text(e.taskId, 64);
+    const partId = text(e.partId, 64);
     return {
       id,
       date: e.date.slice(0, 10),
@@ -73,6 +76,7 @@ function parseExpenses(raw: unknown): Expense[] {
       ...(place ? { place } : {}),
       ...(isKm(e.km) ? { km: Math.round(e.km) } : {}),
       ...(taskId ? { taskId } : {}),
+      ...(partId ? { partId } : {}),
     };
   });
 }
@@ -111,7 +115,10 @@ export function parseBackup(text: string): AppState {
 
   let data: Record<string, unknown>;
   if (raw.app === APP_ID) {
-    if (raw.format !== FORMAT) throw new BackupError('Esta copia es de otra versión de la app.');
+    if (typeof raw.format !== 'number' || raw.format < 1) throw new BackupError('Esta copia es de otra versión de la app.');
+    if (raw.format > FORMAT) {
+      throw new BackupError('Esta copia es de una versión más nueva de la app. Ábrela con internet para que se actualice.');
+    }
     if (!isRecord(raw.state)) throw new BackupError('La copia está vacía.');
     data = raw.state;
   } else if ('km' in raw && 'log' in raw) {

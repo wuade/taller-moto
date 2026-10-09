@@ -1,7 +1,8 @@
-import { BIKE, CONFIDENCE, TASKS, TORQUE_GROUPS, TORQUES, type TorqueKey } from '../data/eliminator500';
+import { BIKE, CONFIDENCE, PARTS, TASKS, TORQUE_GROUPS, TORQUES, type TorqueKey } from '../data/eliminator500';
 import { costOfEntry, spendingByYear } from './expenses';
 import { todayIso } from './format';
 import { sumEuros } from './money';
+import { purchasesOf } from './parts';
 import type { AppState } from './state';
 import { compareStatus, describeInterval, isPendingMount, taskStatus } from './status';
 import type { Cell, Sheet } from './xlsx';
@@ -74,6 +75,30 @@ function plan(state: AppState, now: Date): Sheet {
   return { name: 'Qué toca', widths: [30, 14, 44, 24], header: ['Trabajo', 'Estado', 'Detalle', 'Intervalo'], rows };
 }
 
+function parts(state: AppState): Sheet {
+  const rows = PARTS.map((part): Cell[] => {
+    const last = purchasesOf(state, part)[0];
+    const status = !last ? null : last.mounted === null ? 'Comprado' : last.mounted ? 'Montado' : 'Sin montar';
+    return [
+      part.group,
+      part.name,
+      part.oem,
+      part.alternatives,
+      `${part.spec} · ${part.amount}`,
+      last ? { date: last.expense.date } : null,
+      last?.expense.place ?? null,
+      last ? { euros: last.expense.amount } : null,
+      status,
+    ];
+  });
+  return {
+    name: 'Recambios',
+    widths: [14, 24, 13, 44, 40, 13, 22, 12, 12],
+    header: ['Grupo', 'Recambio', 'Ref. Kawasaki', 'Equivalentes', 'Medidas', 'Última compra', 'Dónde', 'Importe', 'Estado'],
+    rows,
+  };
+}
+
 function torques(state: AppState): Sheet {
   const grouped = new Set(TORQUE_GROUPS.flatMap((g) => g.keys));
   const others = (Object.keys(TORQUES) as TorqueKey[]).filter((k) => !grouped.has(k));
@@ -95,7 +120,7 @@ function torques(state: AppState): Sheet {
 }
 
 export function buildWorkbook(state: AppState, now: Date): Sheet[] {
-  return [summary(state, now), expenses(state), jobs(state), plan(state, now), torques(state)];
+  return [summary(state, now), expenses(state), jobs(state), plan(state, now), parts(state), torques(state)];
 }
 
 export function workbookFileName(now: Date): string {

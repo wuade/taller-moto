@@ -38,8 +38,8 @@ export function ExcelExport() {
     <Card>
       <Eyebrow>Excel</Eyebrow>
       <Body muted>
-        Gastos, trabajos hechos, lo que toca y pares de apriete en un Excel para verlo en el PC. Es una foto de este
-        momento: no sirve para recuperar los datos, para eso está la copia de seguridad.
+        Gastos, trabajos hechos, lo que toca, recambios y pares de apriete en un Excel para verlo en el PC. Es una foto
+        de este momento: no sirve para recuperar los datos, para eso está la copia de seguridad.
       </Body>
       <Button kind="ghost" label="Exportar a Excel" onPress={doExport} disabled={busy} />
       {message ? (

@@ -1,7 +1,7 @@
 import { roundCents, sumEuros } from './money';
 import type { AppState } from './state';
 
-/** Un gasto de la moto. Si se apuntó al marcar un trabajo, lleva su tarea y sus km. */
+/** Un gasto de la moto. Si se apuntó al marcar un trabajo, lleva su tarea y sus km; si es una compra, su recambio. */
 export type Expense = {
   id: string;
   /** "AAAA-MM-DD" */
@@ -12,6 +12,8 @@ export type Expense = {
   place?: string;
   km?: number;
   taskId?: string;
+  /** Si es la compra de un recambio de la lista (PARTS). */
+  partId?: string;
 };
 
 export type ExpenseInput = Omit<Expense, 'id'>;
@@ -33,6 +35,7 @@ function clean(input: ExpenseInput): ExpenseInput {
     ...(place ? { place } : {}),
     ...(input.km !== undefined ? { km: input.km } : {}),
     ...(input.taskId ? { taskId: input.taskId } : {}),
+    ...(input.partId ? { partId: input.partId } : {}),
   };
 }
 

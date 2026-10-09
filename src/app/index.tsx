@@ -6,6 +6,7 @@ import { BIKE, TASKS } from '../data/eliminator500';
 import { yearTotal } from '../logic/expenses';
 import { formatDate, formatInt } from '../logic/format';
 import { formatEuros } from '../logic/money';
+import { unmountedParts } from '../logic/parts';
 import { compareStatus, describeInterval, isPendingMount, taskStatus } from '../logic/status';
 import { useStore } from '../store/StoreProvider';
 import { Body, Button, Card, Eyebrow, Heading, Notice, Screen, TaskRow, Title, makeInputStyle } from '../ui/components';
@@ -67,6 +68,7 @@ export default function Home() {
   const needsBackup = !state.lastExport || state.updated > state.lastExport;
   const year = String(new Date().getFullYear());
   const spent = yearTotal(state.expenses, year);
+  const unmounted = unmountedParts(state).length;
 
   return (
     <Screen>
@@ -123,6 +125,11 @@ export default function Home() {
 
       <View style={{ gap: 8 }}>
         <Button kind="ghost" label="Pares de apriete" onPress={() => router.push('/pares')} />
+        <Button
+          kind="ghost"
+          label={unmounted > 0 ? `Recambios · ${unmounted} sin montar` : 'Recambios'}
+          onPress={() => router.push('/recambios')}
+        />
         <Button kind="ghost" label="Avisos en el Calendario" onPress={() => router.push('/avisos')} />
         <Button
           kind="ghost"

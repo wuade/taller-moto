@@ -336,6 +336,169 @@ export const TASKS: Task[] = [
   },
 ];
 
+export type Part = {
+  id: string;
+  group: string;
+  name: string;
+  /** Referencia de Kawasaki; null si no tiene (aceite, líquidos) o no está en el Excel. */
+  oem: string | null;
+  /** Marcas y modelos equivalentes. */
+  alternatives: string;
+  spec: string;
+  amount: string;
+  note?: string;
+  /** Trabajo en el que se monta: con él se sabe si una compra ya está montada. */
+  taskId?: string;
+};
+
+export const PARTS_SOURCE = 'Tu Excel, pestaña «Recambios y Referencias»';
+
+/** Recambios y consumibles con sus referencias. Sin precios: lo que pagas se apunta en la app. */
+export const PARTS: Part[] = [
+  {
+    id: 'filtroAceite',
+    group: 'Motor',
+    name: 'Filtro de aceite',
+    oem: '16097-0008',
+    alternatives: 'HiFlo HF303RC / K&N KN-303',
+    spec: 'Cartucho roscado',
+    amount: '1 ud',
+    taskId: 'aceite',
+  },
+  {
+    id: 'aceiteMotor',
+    group: 'Motor',
+    name: 'Aceite de motor 10W-40',
+    oem: null,
+    alternatives: 'Motul 7100 / Castrol Power 1 / Yamalube',
+    spec: '10W-40 4T JASO MA2 sintético',
+    amount: '2,0 L con filtro · 1,6 L sin filtro',
+    taskId: 'aceite',
+  },
+  {
+    id: 'bujia',
+    group: 'Motor',
+    name: 'Bujía',
+    oem: '92070-0047',
+    alternatives: 'NGK LMAR9G (de serie)',
+    spec: 'Rosca fina, huelgo 0,7-0,8 mm',
+    amount: '2 uds',
+    taskId: 'bujias',
+  },
+  {
+    id: 'filtroAire',
+    group: 'Motor',
+    name: 'Filtro de aire',
+    oem: '11013-0808',
+    alternatives: 'HiFlo HFA2406 / K&N KA-4018',
+    spec: 'Elemento de papel de alto flujo',
+    amount: '1 ud',
+    taskId: 'aire',
+  },
+  {
+    id: 'pastillasDel',
+    group: 'Frenos',
+    name: 'Pastillas delanteras',
+    oem: '43082-0192',
+    alternatives: 'EBC FA197HH / Brembo sinterizadas',
+    spec: 'Sinterizadas de calle',
+    amount: '1 juego',
+    taskId: 'pastillas',
+  },
+  {
+    id: 'pastillasTras',
+    group: 'Frenos',
+    name: 'Pastillas traseras',
+    oem: '43082-0181',
+    alternatives: 'EBC FA228HH / Brembo sinterizadas',
+    spec: 'Sinterizadas',
+    amount: '1 juego',
+    taskId: 'pastillas',
+  },
+  {
+    id: 'liquidoFrenos',
+    group: 'Frenos',
+    name: 'Líquido de frenos',
+    oem: null,
+    alternatives: 'Motul RBF 600 / Castrol DOT 4',
+    spec: 'DOT 4 sintético',
+    amount: '0,5 L',
+    taskId: 'liquido',
+  },
+  {
+    id: 'cadena',
+    group: 'Transmisión',
+    name: 'Cadena',
+    oem: '92057-0708',
+    alternatives: 'DID 520VX3 / RK 520XSO',
+    spec: 'Paso 520, retenes X-Ring, 114 eslabones, cierre de remache',
+    amount: '1 ud',
+    taskId: 'arrastre',
+  },
+  {
+    id: 'pinon',
+    group: 'Transmisión',
+    name: 'Piñón de ataque',
+    oem: '13144-0103',
+    alternatives: 'JT JTF1539.14RB (engomado)',
+    spec: '14 dientes, paso 520',
+    amount: '1 ud',
+    note: 'Opción touring: JT JTF1539.15, 15 dientes (unas 500 rpm menos en crucero).',
+    taskId: 'arrastre',
+  },
+  {
+    id: 'corona',
+    group: 'Transmisión',
+    name: 'Corona',
+    oem: '42041-0177',
+    alternatives: 'JT JTR486.43',
+    spec: '43 dientes, paso 520',
+    amount: '1 ud',
+    taskId: 'arrastre',
+  },
+  {
+    id: 'neumaticoDel',
+    group: 'Neumáticos',
+    name: 'Neumático delantero',
+    oem: null,
+    alternatives: 'Metzeler Cruisetec / Michelin Commander III / Bridgestone H50',
+    spec: '130/70-18 M/C 63H TL',
+    amount: '1 ud',
+    note: 'De serie: IRC GS-23R.',
+    taskId: 'neumaticos',
+  },
+  {
+    id: 'neumaticoTras',
+    group: 'Neumáticos',
+    name: 'Neumático trasero',
+    oem: null,
+    alternatives: 'Metzeler Cruisetec 77H RF / Michelin Commander III / Bridgestone H50',
+    spec: '150/80-16 M/C 71H TL (medida de serie)',
+    amount: '1 ud',
+    note: 'De serie: IRC GS-23R.',
+    taskId: 'neumaticos',
+  },
+  {
+    id: 'refrigerante',
+    group: 'Refrigeración',
+    name: 'Líquido refrigerante',
+    oem: null,
+    alternatives: 'Motul Inugel Expert / Kawasaki Coolant',
+    spec: 'Premezclado 50/50 orgánico (-35 °C)',
+    amount: '1,3 L',
+    taskId: 'refrigerante',
+  },
+  {
+    id: 'bateria',
+    group: 'Eléctrico',
+    name: 'Batería AGM',
+    oem: '26012-0834',
+    alternatives: 'Yuasa YTZ10S / BS BTZ10S / Fulbat FTZ10S',
+    spec: 'AGM sellada 12 V 8,6 Ah, 150 × 87 × 93 mm',
+    amount: '1 ud',
+  },
+];
+
 /** Estado de partida, sacado del historial del Excel a 09/10/2026. */
 export const SEED = {
   km: 11818,
