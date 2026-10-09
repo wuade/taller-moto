@@ -6,6 +6,7 @@ import { BackupError, backupFileName, parseBackup, serializeBackup } from '../lo
 import { formatDate } from '../logic/format';
 import { useStore } from '../store/StoreProvider';
 import { Body, Button, Card, Eyebrow, Heading, Notice, Screen } from '../ui/components';
+import { ExcelExport } from '../ui/ExcelExport';
 import { useColors } from '../ui/theme';
 
 type Message = { tone: 'ok' | 'error'; text: string };
@@ -47,13 +48,17 @@ export default function BackupScreen() {
     try {
       const text = await pickBackupText();
       if (text === null) return;
-      const { added } = importState(parseBackup(text));
+      const { added, addedExpenses } = importState(parseBackup(text));
+      const news = [
+        added > 0 ? `${added} registro${added > 1 ? 's' : ''} nuevo${added > 1 ? 's' : ''}` : null,
+        addedExpenses > 0 ? `${addedExpenses} gasto${addedExpenses > 1 ? 's' : ''} nuevo${addedExpenses > 1 ? 's' : ''}` : null,
+      ].filter(Boolean);
       setMessage({
         tone: 'ok',
         text:
-          added > 0
-            ? `Copia importada: ${added} registro${added > 1 ? 's' : ''} nuevo${added > 1 ? 's' : ''}. No se ha borrado nada.`
-            : 'Copia importada. No había registros nuevos.',
+          news.length > 0
+            ? `Copia importada: ${news.join(' y ')}. No se ha borrado nada.`
+            : 'Copia importada. No había nada nuevo.',
       });
     } catch (error) {
       setMessage({
@@ -92,6 +97,8 @@ export default function BackupScreen() {
         </Body>
         <Button kind="ghost" label="Importar copia" onPress={doImport} disabled={busy} />
       </Card>
+
+      <ExcelExport />
 
       {message ? (
         message.tone === 'error' ? (

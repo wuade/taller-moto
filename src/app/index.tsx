@@ -3,7 +3,9 @@ import { useMemo, useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BIKE, TASKS } from '../data/eliminator500';
+import { yearTotal } from '../logic/expenses';
 import { formatDate, formatInt } from '../logic/format';
+import { formatEuros } from '../logic/money';
 import { compareStatus, describeInterval, isPendingMount, taskStatus } from '../logic/status';
 import { useStore } from '../store/StoreProvider';
 import { Body, Button, Card, Eyebrow, Heading, Notice, Screen, TaskRow, Title, makeInputStyle } from '../ui/components';
@@ -63,6 +65,8 @@ export default function Home() {
   }, [state.log, state.km]);
 
   const needsBackup = !state.lastExport || state.updated > state.lastExport;
+  const year = String(new Date().getFullYear());
+  const spent = yearTotal(state.expenses, year);
 
   return (
     <Screen>
@@ -120,6 +124,11 @@ export default function Home() {
       <View style={{ gap: 8 }}>
         <Button kind="ghost" label="Pares de apriete" onPress={() => router.push('/pares')} />
         <Button kind="ghost" label="Avisos en el Calendario" onPress={() => router.push('/avisos')} />
+        <Button
+          kind="ghost"
+          label={spent > 0 ? `Gastos · ${formatEuros(spent)} en ${year}` : 'Gastos'}
+          onPress={() => router.push('/gastos')}
+        />
         <Button
           kind="ghost"
           label={needsBackup ? 'Copia de seguridad · cambios sin copia' : 'Copia de seguridad'}

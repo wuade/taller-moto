@@ -2,8 +2,12 @@ export type ShareResult = 'shared' | 'downloaded' | 'cancelled' | 'unavailable';
 export type FileKind = { mimeType: string; uti: string; title: string };
 
 /** En el navegador: menú de compartir del sistema si admite archivos (iPhone), si no, descarga. */
-export async function shareFile(fileName: string, text: string, kind: FileKind): Promise<ShareResult> {
-  const file = new File([text], fileName, { type: kind.mimeType });
+export async function shareFile(
+  fileName: string,
+  content: string | Uint8Array<ArrayBuffer>,
+  kind: FileKind,
+): Promise<ShareResult> {
+  const file = new File([content], fileName, { type: kind.mimeType });
   if (typeof navigator !== 'undefined' && navigator.canShare?.({ files: [file] })) {
     try {
       await navigator.share({ files: [file], title: kind.title });

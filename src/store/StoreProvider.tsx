@@ -3,6 +3,7 @@ import { createContext, type ReactNode, useCallback, useContext, useEffect, useM
 
 import type { LogEntry, TorqueKey } from '../data/eliminator500';
 import { parseBackup } from '../logic/backup';
+import { type ExpenseInput, addExpense, removeExpense, updateExpense } from '../logic/expenses';
 import { todayIso } from '../logic/format';
 import { type AppState, addEntry, countEntries, mergeStates, removeEntry, seedState } from '../logic/state';
 
@@ -13,11 +14,16 @@ type Store = {
   state: AppState;
   saveError: string | null;
   setKm: (km: number) => void;
-  markDone: (taskId: string) => void;
+  /** Marca un trabajo como hecho con los km actuales; si se indica, apunta también lo que costó. */
+  markDone: (taskId: string, cost?: Pick<ExpenseInput, 'amount' | 'concept' | 'place'>) => void;
   deleteEntry: (taskId: string, entry: LogEntry) => void;
   setOverride: (key: TorqueKey, nm: number, source: string) => void;
+  addExpense: (input: ExpenseInput) => void;
+  updateExpense: (id: string, input: ExpenseInput) => void;
+  removeExpense: (id: string) => void;
   clearOverride: (key: TorqueKey) => void;
-  importState: (incoming: AppState) => { added: number };
+  /** Une una copia con lo del móvil y dice cuántos trabajos y gastos nuevos ha traído. */
+  importState: (incoming: AppState) => { added: number; addedExpenses: number };
   markExported: () => void;
 };
 
@@ -73,10 +79,12 @@ export function StoreProvider({ children, fallback }: { children: ReactNode; fal
           const now = new Date();
           return { ...s, km, kmDate: todayIso(now), updated: now.toISOString() };
         }),
-      markDone: (taskId) =>
+      markDone: (taskId, cost) =>
         update((s) => {
           const now = new Date();
-          return addEntry(s, taskId, { km: s.km, date: todayIso(now) }, now);
+          const date = todayIso(now);
+          const done = addEntry(s, taskId, { km: s.km, date }, now);
+          return cost ? addExpense(done, { ...cost, date, km: s.km, taskId }, now) : done;
         }),
       deleteEntry: (taskId, entry) => update((s) => removeEntry(s, taskId, entry, new Date())),
       setOverride: (key, nm, source) =>
@@ -88,6 +96,9 @@ export function StoreProvider({ children, fallback }: { children: ReactNode; fal
             updated: now.toISOString(),
           };
         }),
+      addExpense: (input) => update((s) => addExpense(s, input, new Date())),
+      updateExpense: (id, input) => update((s) => updateExpense(s, id, input, new Date())),
+      removeExpense: (id) => update((s) => removeExpense(s, id, new Date())),
       clearOverride: (key) =>
         update((s) => {
           const overrides = { ...s.overrides };
@@ -97,7 +108,10 @@ export function StoreProvider({ children, fallback }: { children: ReactNode; fal
       importState: (incoming) => {
         const merged = mergeStates(state, incoming);
         setState(merged);
-        return { added: countEntries(merged.log) - countEntries(state.log) };
+        return {
+          added: countEntries(merged.log) - countEntries(state.log),
+          addedExpenses: merged.expenses.length - state.expenses.length,
+        };
       },
       markExported: () => update((s) => ({ ...s, lastExport: new Date().toISOString() })),
     };

@@ -8,6 +8,8 @@ App para planificar y apuntar el mantenimiento de una Kawasaki Eliminator 500 SE
 - **Pasos con su par**: cada tarea trae herramientas, pasos y el par de apriete de cada tornillo, con su fuente.
 - **Pares de apriete**: la tabla completa. Cada valor lleva etiqueta: *Oficial*, *Cita del manual*, *Probable* o *Sin dato*. Si confirmas un valor (por ejemplo, con el taller), lo guardas con su fuente; sin fuente no se guarda.
 - **Avisos en el Calendario**: pasa al Calendario del móvil cuándo toca cada trabajo, con aviso una semana antes y el mismo día. Las fechas por km se estiman con tu media de km al día.
+- **Gastos**: apunta lo que cuesta cada trabajo al marcarlo como hecho, o cualquier otro gasto de la moto, y ve el total de cada año.
+- **Exportar a Excel**: un `.xlsx` con gastos, trabajos hechos, lo que toca y pares de apriete, para verlo en el PC. Es una foto: no sirve para recuperar datos.
 - **Copia de seguridad**: exporta un archivo `.json` y guárdalo en Google Drive. Al importarlo se une con lo que hay en el móvil y no se borra nada.
 
 ## Instalar en iPhone

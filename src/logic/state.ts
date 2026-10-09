@@ -1,4 +1,5 @@
 import { SEED, type LogEntry, type TorqueKey, TORQUES } from '../data/eliminator500';
+import { type Expense, mergeExpenses } from './expenses';
 
 /** Valor de par que el usuario ha confirmado (taller, manual de servicio...), siempre con su fuente. */
 export type TorqueOverride = { nm: number; source: string; date: string };
@@ -9,6 +10,7 @@ export type AppState = {
   kmDate?: string;
   log: Record<string, LogEntry[]>;
   overrides: Partial<Record<TorqueKey, TorqueOverride>>;
+  expenses: Expense[];
   /** Último cambio de datos (ISO). */
   updated: string;
   /** Última copia de seguridad exportada (ISO). */
@@ -21,6 +23,7 @@ export function seedState(): AppState {
     kmDate: SEED.kmDate,
     log: structuredCloneLog(SEED.log),
     overrides: {},
+    expenses: [],
     updated: '2026-10-09T00:00:00.000Z',
   };
 }
@@ -65,6 +68,7 @@ export function mergeStates(local: AppState, incoming: AppState): AppState {
     kmDate: reading.kmDate,
     log: mergeLogs(local.log, incoming.log),
     overrides,
+    expenses: mergeExpenses(local.expenses, incoming.expenses),
     updated: local.updated > incoming.updated ? local.updated : incoming.updated,
     lastExport: local.lastExport,
   };
@@ -78,6 +82,7 @@ export function addEntry(state: AppState, taskId: string, entry: LogEntry, now: 
   };
 }
 
+/** Quita un trabajo hecho y lo que se apuntó que costó ese día. */
 export function removeEntry(state: AppState, taskId: string, entry: LogEntry, now: Date): AppState {
   const entries = state.log[taskId] ?? [];
   const index = entries.findIndex((e) => e.km === entry.km && dayOf(e.date) === dayOf(entry.date));
@@ -85,6 +90,7 @@ export function removeEntry(state: AppState, taskId: string, entry: LogEntry, no
   return {
     ...state,
     log: { ...state.log, [taskId]: entries.filter((_, i) => i !== index) },
+    expenses: state.expenses.filter((e) => !(e.taskId === taskId && e.date === dayOf(entry.date))),
     updated: now.toISOString(),
   };
 }

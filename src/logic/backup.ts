@@ -1,4 +1,6 @@
 import type { LogEntry } from '../data/eliminator500';
+import type { Expense } from './expenses';
+import { roundCents } from './money';
 import { type AppState, type TorqueOverride, isTorqueKey } from './state';
 
 const APP_ID = 'taller-moto';
@@ -37,6 +39,42 @@ function parseLog(raw: unknown): Record<string, LogEntry[]> {
     });
   }
   return log;
+}
+
+const text = (v: unknown, max: number): string | undefined =>
+  typeof v === 'string' && v.trim() !== '' ? v.trim().slice(0, max) : undefined;
+
+/** Las copias anteriores a los gastos no los traen: se leen como ninguno. */
+function parseExpenses(raw: unknown): Expense[] {
+  if (raw === undefined) return [];
+  if (!Array.isArray(raw)) throw new BackupError('Los gastos de la copia no son una lista.');
+  return raw.map((e) => {
+    const concept = isRecord(e) ? text(e.concept, 120) : undefined;
+    const id = isRecord(e) ? text(e.id, 64) : undefined;
+    if (
+      !isRecord(e) ||
+      !id ||
+      !concept ||
+      !isDay(e.date) ||
+      typeof e.amount !== 'number' ||
+      !Number.isFinite(e.amount) ||
+      e.amount < 0 ||
+      e.amount > 1_000_000
+    ) {
+      throw new BackupError('Hay un gasto sin fecha, importe o concepto válidos.');
+    }
+    const place = text(e.place, 80);
+    const taskId = text(e.taskId, 64);
+    return {
+      id,
+      date: e.date.slice(0, 10),
+      amount: roundCents(e.amount),
+      concept,
+      ...(place ? { place } : {}),
+      ...(isKm(e.km) ? { km: Math.round(e.km) } : {}),
+      ...(taskId ? { taskId } : {}),
+    };
+  });
 }
 
 function parseOverrides(raw: unknown): AppState['overrides'] {
@@ -88,6 +126,7 @@ export function parseBackup(text: string): AppState {
     kmDate: isDay(data.kmDate) ? data.kmDate.slice(0, 10) : undefined,
     log: parseLog(data.log),
     overrides: parseOverrides(data.overrides),
+    expenses: parseExpenses(data.expenses),
     updated: typeof data.updated === 'string' ? data.updated : new Date(0).toISOString(),
   };
 }

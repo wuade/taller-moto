@@ -1,13 +1,26 @@
 import { useKeepAwake } from 'expo-keep-awake';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { TASKS, type LogEntry } from '../../data/eliminator500';
+import { costOfEntry } from '../../logic/expenses';
 import { formatDate, formatKm } from '../../logic/format';
+import { formatEuros, parseEuros } from '../../logic/money';
 import { describeInterval, isPendingMount, lastEntry, taskStatus } from '../../logic/status';
 import { useStore } from '../../store/StoreProvider';
-import { Body, Button, Card, Checkbox, Eyebrow, Pill, Screen, Title, TorqueCard } from '../../ui/components';
+import {
+  Body,
+  Button,
+  Card,
+  Checkbox,
+  Eyebrow,
+  Pill,
+  Screen,
+  Title,
+  TorqueCard,
+  makeInputStyle,
+} from '../../ui/components';
 import { levelColors, useColors } from '../../ui/theme';
 
 export default function TaskScreen() {
@@ -18,6 +31,9 @@ export default function TaskScreen() {
   const { state, markDone, deleteEntry } = useStore();
   const [checked, setChecked] = useState<Record<number, boolean>>({});
   const [confirming, setConfirming] = useState<string | null>(null);
+  const [cost, setCost] = useState('');
+  const [place, setPlace] = useState('');
+  const [costError, setCostError] = useState<string | null>(null);
 
   const task = TASKS.find((t) => t.id === id);
   if (!task) {
@@ -87,11 +103,49 @@ export default function TaskScreen() {
         ))}
       </View>
 
+      {doneToday ? null : (
+        <View style={{ gap: 8 }}>
+          <Text style={{ color: c.muted, fontSize: 13 }}>Lo que costó y dónde se hizo (opcional)</Text>
+          <View style={styles.costRow}>
+            <TextInput
+              accessibilityLabel="Lo que costó, en euros"
+              placeholder="Coste €"
+              placeholderTextColor={c.muted}
+              keyboardType="decimal-pad"
+              value={cost}
+              onChangeText={(text) => {
+                setCost(text);
+                setCostError(null);
+              }}
+              style={[makeInputStyle(c), styles.costInput]}
+            />
+            <TextInput
+              accessibilityLabel="Dónde se hizo"
+              placeholder="Dónde"
+              placeholderTextColor={c.muted}
+              value={place}
+              onChangeText={(text) => {
+                setPlace(text);
+                setCostError(null);
+              }}
+              style={[makeInputStyle(c), styles.placeInput]}
+            />
+          </View>
+          {costError ? <Text style={{ color: c.danger }}>{costError}</Text> : null}
+        </View>
+      )}
       <Button
         label={doneToday ? `Ya registrado a ${formatKm(state.km)}` : `Marcar hecho a ${formatKm(state.km)}`}
         disabled={doneToday}
         onPress={() => {
-          markDone(task.id);
+          const amount = cost.trim() ? parseEuros(cost) : null;
+          if (cost.trim() && amount === null) {
+            return setCostError('Escribe el coste en euros, por ejemplo 85 o 120,50. Si no lo sabes, déjalo vacío.');
+          }
+          if (amount === null && place.trim()) {
+            return setCostError('Para apuntar dónde se hizo, escribe también lo que costó (puede ser 0).');
+          }
+          markDone(task.id, amount !== null ? { amount, concept: task.name, place } : undefined);
           router.back();
         }}
       />
@@ -104,18 +158,20 @@ export default function TaskScreen() {
         {history.length === 0 ? <Body muted>Aún sin registros.</Body> : null}
         {history.map((entry: LogEntry) => {
           const key = `${entry.km}|${entry.date}`;
+          const paid = costOfEntry(state.expenses, task.id, entry.date);
           return (
             <View key={key} style={[styles.historyRow, { borderColor: c.line }]}>
               <Text style={{ color: c.ink, flex: 1, fontVariant: ['tabular-nums'] }}>
                 {formatDate(entry.date)} · {formatKm(entry.km)}
                 {entry.km === 0 ? ' (de fábrica)' : ''}
+                {paid !== null ? ` · ${formatEuros(paid)}` : ''}
               </Text>
               {confirming === key ? (
                 <View style={styles.confirmRow}>
                   <Button
                     small
                     kind="danger"
-                    label="Borrar"
+                    label={paid !== null ? 'Borrar con su gasto' : 'Borrar'}
                     onPress={() => {
                       deleteEntry(task.id, entry);
                       setConfirming(null);
@@ -140,4 +196,7 @@ const styles = StyleSheet.create({
   stepBody: { flex: 1, minWidth: 0 },
   historyRow: { flexDirection: 'row', alignItems: 'center', gap: 8, borderBottomWidth: 1, paddingVertical: 6 },
   confirmRow: { flexDirection: 'row', gap: 6 },
+  costRow: { flexDirection: 'row', gap: 8 },
+  costInput: { flex: 1, minWidth: 0 },
+  placeInput: { flex: 1.4, minWidth: 0 },
 });
