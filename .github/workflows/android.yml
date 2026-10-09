@@ -1,10 +1,7 @@
 name: APK Android
 
-# Cada cambio en main compila el APK y lo publica en Releases.
+# Compila el APK y lo publica en Releases. Se lanza a mano: Actions > APK Android > Run workflow.
 on:
-  push:
-    branches: [main]
-    paths-ignore: ['**.md']
   workflow_dispatch:
 
 permissions:
@@ -81,12 +78,4 @@ jobs:
 
       - name: Resumir el fallo
         if: failure()
-        # Deja el error como anotación del check para poder leerlo sin abrir los registros.
-        run: |
-          [ -f ci.log ] || exit 0
-          esc() { sed -e 's/%/%25/g' -e 's/\r/%0D/g' | awk 'BEGIN { ORS = "%0A" } { print }'; }
-          errors=$(grep -E '^e: |error:|ERROR|FAILED' ci.log | grep -v 'npm warn' | head -n 30 || true)
-          [ -n "$errors" ] && echo "::error title=Errores::$(printf '%s\n' "$errors" | esc)"
-          wrong=$(awk '/What went wrong/ { f = 1 } /^\* Try:/ { f = 0 } f' ci.log | head -n 40 || true)
-          [ -n "$wrong" ] && echo "::error title=Gradle::$(printf '%s\n' "$wrong" | esc)"
-          echo "::error title=Final del registro::$(tail -n 60 ci.log | esc)"
+        run: scripts/ci-fallo.sh ci.log

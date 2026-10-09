@@ -9,6 +9,14 @@ App para planificar y apuntar el mantenimiento de una Kawasaki Eliminator 500 SE
 - **Pares de apriete**: la tabla completa. Cada valor lleva etiqueta: *Oficial*, *Cita del manual*, *Probable* o *Sin dato*. Si confirmas un valor (por ejemplo, con el taller), lo guardas con su fuente; sin fuente no se guarda.
 - **Copia de seguridad**: exporta un archivo `.json` y guárdalo en Google Drive. Al importarlo se une con lo que hay en el móvil y no se borra nada.
 
+## Instalar en iPhone
+
+1. En el iPhone, abre https://wuade.github.io/taller-moto/ con Safari.
+2. Pulsa el botón de compartir y elige «Añadir a pantalla de inicio».
+3. Abre la app desde el icono «Taller». La primera vez necesita internet; después abre también sin cobertura.
+
+Los datos se guardan en el iPhone, dentro de la app. Si borras el icono, se borran con él: haz una copia de seguridad antes.
+
 ## Instalar en Android
 
 1. En el móvil, abre [la última versión](https://github.com/wuade/taller-moto/releases/latest). El repositorio es privado: inicia sesión en GitHub en el navegador.
@@ -36,4 +44,6 @@ npx expo start      # desarrollo
 npm run build:web   # versión web instalable (PWA) en dist/
 ```
 
-Cada cambio en `main` compila el APK en GitHub Actions ([`.github/workflows/android.yml`](.github/workflows/android.yml)) y lo publica en Releases.
+Cada cambio en `main` publica la versión web en GitHub Pages ([`.github/workflows/web.yml`](.github/workflows/web.yml)).
+
+El APK de Android se compila a mano: Actions > APK Android > Run workflow ([`.github/workflows/android.yml`](.github/workflows/android.yml)). Queda publicado en Releases.

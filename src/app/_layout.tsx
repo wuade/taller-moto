@@ -14,6 +14,8 @@ function useOfflineWeb() {
     navigator.serviceWorker.register(`${base}/sw.js`, { scope: `${base}/` }).catch(() => {
       // Sin service worker la app sigue funcionando con conexión.
     });
+    // Pide que el navegador no borre los datos guardados cuando le falte espacio.
+    navigator.storage?.persist?.().catch(() => {});
   }, []);
 }
 

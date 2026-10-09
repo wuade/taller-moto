@@ -45,4 +45,4 @@ Docs: https://docs.expo.dev/eas/index.md
 - Los pares de apriete nunca se inventan. Cada valor de `src/data/eliminator500.ts` lleva su fuente y su nivel de confianza; si falta un dato, va con `nm: null` y `conf: 'nodata'`.
 - Los textos de la app están en español.
 - La lógica de estados, copias y fusión de datos tiene pruebas en `src/logic/__tests__`; añade pruebas al cambiarla.
-- El APK se compila en GitHub Actions; `android/` e `ios/` se generan con `expo prebuild` y no se suben al repositorio.
+- La web (PWA) se publica en GitHub Pages en cada push a `main`; el APK se compila a mano en GitHub Actions. `android/` e `ios/` se generan con `expo prebuild` y no se suben al repositorio.

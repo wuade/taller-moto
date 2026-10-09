@@ -55,9 +55,10 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return;
-  // Las pantallas de la app son todas index.html: sin conexión se sirve la copia guardada.
+  // Las pantallas de la app son todas index.html. Se sirve la copia guardada primero para que abra
+  // al momento aunque la cobertura sea mala; las versiones nuevas llegan con un sw.js nuevo.
   if (request.mode === 'navigate') {
-    event.respondWith(fetch(request).catch(() => caches.match('./index.html', { ignoreSearch: true })));
+    event.respondWith(caches.match('./index.html').then((hit) => hit ?? fetch(request)));
     return;
   }
   event.respondWith(caches.match(request, { ignoreSearch: true }).then((hit) => hit ?? fetch(request)));

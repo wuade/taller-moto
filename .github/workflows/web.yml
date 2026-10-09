@@ -1,0 +1,69 @@
+name: Web para iPhone
+
+# Cada cambio en main publica la versión web instalable en GitHub Pages.
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci 2>&1 | tee -a "$GITHUB_WORKSPACE/ci.log"
+
+      - name: Tipos, lint y pruebas
+        run: |
+          { npx tsc --noEmit && npx expo lint && npx jest --ci; } 2>&1 | tee -a "$GITHUB_WORKSPACE/ci.log"
+
+      - name: Ruta base de GitHub Pages
+        # La web se sirve en https://<usuario>.github.io/<repositorio>/.
+        run: |
+          node -e '
+            const fs = require("fs");
+            const app = JSON.parse(fs.readFileSync("app.json", "utf8"));
+            const repo = process.env.GITHUB_REPOSITORY.split("/")[1];
+            app.expo.experiments = { ...app.expo.experiments, baseUrl: `/${repo}` };
+            fs.writeFileSync("app.json", JSON.stringify(app, null, 2));
+          '
+
+      - name: Compilar la web
+        run: npm run build:web 2>&1 | tee -a "$GITHUB_WORKSPACE/ci.log"
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+      - id: deploy
+        uses: actions/deploy-pages@v5
+
+      - name: Resumir el fallo
+        if: failure()
+        run: scripts/ci-fallo.sh ci.log
