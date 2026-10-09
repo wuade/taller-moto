@@ -5,7 +5,7 @@ import type { LogEntry, TorqueKey } from '../data/eliminator500';
 import { parseBackup } from '../logic/backup';
 import { type ExpenseInput, addExpense, removeExpense, updateExpense } from '../logic/expenses';
 import { todayIso } from '../logic/format';
-import { type AppState, addEntry, countEntries, mergeStates, removeEntry, seedState } from '../logic/state';
+import { type AppState, addEntry, importInto, removeEntry, seedState } from '../logic/state';
 
 // Todo se guarda en el propio móvil: la app funciona igual sin cobertura.
 const STORAGE_KEY = 'taller-moto:state:v1';
@@ -106,12 +106,9 @@ export function StoreProvider({ children, fallback }: { children: ReactNode; fal
           return { ...s, overrides, updated: new Date().toISOString() };
         }),
       importState: (incoming) => {
-        const merged = mergeStates(state, incoming);
+        const { state: merged, added, addedExpenses } = importInto(state, incoming, new Date());
         setState(merged);
-        return {
-          added: countEntries(merged.log) - countEntries(state.log),
-          addedExpenses: merged.expenses.length - state.expenses.length,
-        };
+        return { added, addedExpenses };
       },
       markExported: () => update((s) => ({ ...s, lastExport: new Date().toISOString() })),
     };

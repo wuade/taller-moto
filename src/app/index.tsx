@@ -7,16 +7,24 @@ import { yearTotal } from '../logic/expenses';
 import { formatDate, formatInt } from '../logic/format';
 import { formatEuros } from '../logic/money';
 import { unmountedParts } from '../logic/parts';
+import { backupReminder, kmAge } from '../logic/reminders';
 import { compareStatus, describeInterval, isPendingMount, taskStatus } from '../logic/status';
 import { useStore } from '../store/StoreProvider';
 import { Body, Button, Card, Eyebrow, Heading, Notice, Screen, TaskRow, Title, makeInputStyle } from '../ui/components';
 import { mono, useColors } from '../ui/theme';
+
+function kmAgeText(days: number): string {
+  if (days === 0) return 'Apuntados hoy.';
+  if (days === 1) return 'Apuntados ayer.';
+  return `Apuntados hace ${days} días.`;
+}
 
 function KmCard() {
   const c = useColors();
   const { state, setKm } = useStore();
   const [kmText, setKmText] = useState(String(state.km));
   const [kmError, setKmError] = useState<string | null>(null);
+  const age = kmAge(state.kmDate, new Date());
 
   const saveKm = () => {
     const value = Number(kmText.replace(/[.\s]/g, ''));
@@ -45,6 +53,14 @@ function KmCard() {
         <Button small kind="ghost" label="Guardar" onPress={saveKm} />
       </View>
       {kmError ? <Text style={{ color: c.danger }}>{kmError}</Text> : null}
+      {age ? (
+        <Text style={{ color: age.stale ? c.warn : c.muted, fontSize: 13, lineHeight: 18 }}>
+          {kmAgeText(age.days)}
+          {age.stale
+            ? ' Si has rodado, «Qué toca» va atrasado: pon los de hoy y pulsa Guardar, aunque sean los mismos.'
+            : ''}
+        </Text>
+      ) : null}
     </Card>
   );
 }
@@ -66,6 +82,7 @@ export default function Home() {
   }, [state.log, state.km]);
 
   const needsBackup = !state.lastExport || state.updated > state.lastExport;
+  const backup = backupReminder(state, new Date());
   const year = String(new Date().getFullYear());
   const spent = yearTotal(state.expenses, year);
   const unmounted = unmountedParts(state).length;
@@ -77,6 +94,14 @@ export default function Home() {
         <Title>{BIKE.name}</Title>
         <Body muted>{BIKE.detail}</Body>
       </View>
+
+      {backup ? (
+        <Notice action={{ label: 'Hacer copia', onPress: () => router.push('/copia') }}>
+          {backup.lastDays === null
+            ? 'Aún no tienes ninguna copia. Si pierdes el móvil o borras la app, pierdes todo lo apuntado.'
+            : `Tu última copia es de hace ${backup.lastDays} días y tienes cambios que solo están en este móvil.`}
+        </Notice>
+      ) : null}
 
       {/* key: si los km cambian por una copia importada, el campo vuelve a empezar con el valor nuevo. */}
       <KmCard key={state.km} />

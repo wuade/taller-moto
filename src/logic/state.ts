@@ -17,6 +17,9 @@ export type AppState = {
   lastExport?: string;
 };
 
+/** Fecha de los datos de partida: un estado con esta fecha aún no tiene nada apuntado por el usuario. */
+export const SEED_UPDATED = '2026-10-09T00:00:00.000Z';
+
 export function seedState(): AppState {
   return {
     km: SEED.km,
@@ -24,7 +27,7 @@ export function seedState(): AppState {
     log: structuredCloneLog(SEED.log),
     overrides: {},
     expenses: [],
-    updated: '2026-10-09T00:00:00.000Z',
+    updated: SEED_UPDATED,
   };
 }
 
@@ -72,6 +75,25 @@ export function mergeStates(local: AppState, incoming: AppState): AppState {
     updated: local.updated > incoming.updated ? local.updated : incoming.updated,
     lastExport: local.lastExport,
   };
+}
+
+export type ImportResult = { state: AppState; added: number; addedExpenses: number };
+
+/**
+ * Une una copia importada con lo del móvil y cuenta los trabajos y gastos nuevos.
+ * Si trae algo nuevo, cuenta como un cambio de ahora: todavía no está en ninguna copia hecha desde el móvil.
+ */
+export function importInto(local: AppState, incoming: AppState, now: Date): ImportResult {
+  const merged = mergeStates(local, incoming);
+  const added = countEntries(merged.log) - countEntries(local.log);
+  const addedExpenses = merged.expenses.length - local.expenses.length;
+  const changed =
+    added > 0 ||
+    addedExpenses > 0 ||
+    merged.km !== local.km ||
+    merged.kmDate !== local.kmDate ||
+    JSON.stringify(merged.overrides) !== JSON.stringify(local.overrides);
+  return { state: { ...merged, updated: changed ? now.toISOString() : local.updated }, added, addedExpenses };
 }
 
 export function addEntry(state: AppState, taskId: string, entry: LogEntry, now: Date): AppState {

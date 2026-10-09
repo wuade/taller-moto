@@ -204,11 +204,25 @@ export function TorqueCard({ tkey, override }: { tkey: TorqueKey; override?: Tor
   );
 }
 
-export function Notice({ children, tone = 'warn' }: { children: ReactNode; tone?: 'warn' | 'danger' }) {
+export function Notice({
+  children,
+  tone = 'warn',
+  action,
+}: {
+  children: ReactNode;
+  tone?: 'warn' | 'danger';
+  /** Botón para resolver lo que avisa. */
+  action?: { label: string; onPress: () => void };
+}) {
   const c = useColors();
   return (
     <View style={[styles.notice, { backgroundColor: tone === 'danger' ? c.dangerBg : c.warnBg }]}>
       <Text style={[styles.body, { color: c.ink }]}>{children}</Text>
+      {action ? (
+        <View style={{ alignSelf: 'flex-start' }}>
+          <Button small label={action.label} onPress={action.onPress} />
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -268,6 +282,6 @@ const styles = StyleSheet.create({
   torqueTag: { fontSize: 11, fontWeight: '800', letterSpacing: 0.8, textTransform: 'uppercase' },
   torqueValue: { fontFamily: mono, fontSize: 24, fontWeight: '700', fontVariant: ['tabular-nums'] },
   torqueAlt: { fontSize: 13, fontWeight: '500' },
-  notice: { borderRadius: 10, padding: 12 },
+  notice: { borderRadius: 10, padding: 12, gap: 10 },
   input: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, fontSize: 16 },
 });
