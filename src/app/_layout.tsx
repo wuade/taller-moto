@@ -22,13 +22,26 @@ function useOfflineWeb(): boolean {
     const onControllerChange = () => {
       if (hadController) setUpdateReady(true);
     };
+    // El iPhone no vuelve a cargar la app al volver a ella, así que solo buscaría versión nueva al
+    // cerrarla del todo. Se busca cada vez que la app vuelve a la pantalla.
+    const onVisibilityChange = () => {
+      if (document.visibilityState !== 'visible') return;
+      navigator.serviceWorker
+        .getRegistration()
+        .then((registration) => registration?.update())
+        .catch(() => {});
+    };
     navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
+    document.addEventListener('visibilitychange', onVisibilityChange);
     navigator.serviceWorker.register(`${base}/sw.js`, { scope: `${base}/` }).catch(() => {
       // Sin service worker la app sigue funcionando con conexión.
     });
     // Pide que el navegador no borre los datos guardados cuando le falte espacio.
     navigator.storage?.persist?.().catch(() => {});
-    return () => navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+    return () => {
+      navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, []);
   return updateReady;
 }
