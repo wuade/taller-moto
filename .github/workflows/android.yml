@@ -1,0 +1,92 @@
+name: APK Android
+
+# Cada cambio en main compila el APK y lo publica en Releases.
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apk-android
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    defaults:
+      run:
+        shell: bash
+    env:
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Instalar dependencias
+        run: npm ci 2>&1 | tee -a "$GITHUB_WORKSPACE/ci.log"
+
+      - name: Tipos, lint y pruebas
+        run: |
+          { npx tsc --noEmit && npx expo lint && npx jest --ci; } 2>&1 | tee -a "$GITHUB_WORKSPACE/ci.log"
+
+      - name: Número de versión
+        # versionCode tiene que subir en cada APK para que Android lo instale encima del anterior.
+        run: |
+          node -e '
+            const fs = require("fs");
+            const app = JSON.parse(fs.readFileSync("app.json", "utf8"));
+            app.expo.version = `1.0.${process.env.GITHUB_RUN_NUMBER}`;
+            app.expo.android.versionCode = Number(process.env.GITHUB_RUN_NUMBER);
+            fs.writeFileSync("app.json", JSON.stringify(app, null, 2));
+          '
+
+      - name: Generar proyecto Android
+        run: npx expo prebuild --platform android --no-install 2>&1 | tee -a "$GITHUB_WORKSPACE/ci.log"
+
+      - name: Compilar APK
+        working-directory: android
+        # Solo arquitecturas de móvil: x86 es para emuladores y alarga la compilación.
+        run: |
+          ./gradlew assembleRelease --no-daemon --console=plain \
+            -PreactNativeArchitectures=armeabi-v7a,arm64-v8a 2>&1 | tee -a "$GITHUB_WORKSPACE/ci.log"
+
+      - name: Publicar en Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="v1.0.${GITHUB_RUN_NUMBER}"
+          cp android/app/build/outputs/apk/release/app-release.apk taller-moto.apk
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" taller-moto.apk --clobber
+          else
+            gh release create "$tag" taller-moto.apk \
+              --target "$GITHUB_SHA" \
+              --title "Taller Moto 1.0.${GITHUB_RUN_NUMBER}" \
+              --notes "Descarga taller-moto.apk desde el móvil Android y ábrelo. Si ya tienes la app, se instala encima y conserva tus datos."
+          fi
+
+      - name: Resumir el fallo
+        if: failure()
+        # Deja el error como anotación del check para poder leerlo sin abrir los registros.
+        run: |
+          [ -f ci.log ] || exit 0
+          esc() { sed -e 's/%/%25/g' -e 's/\r/%0D/g' | awk 'BEGIN { ORS = "%0A" } { print }'; }
+          errors=$(grep -E '^e: |error:|ERROR|FAILED' ci.log | grep -v 'npm warn' | head -n 30 || true)
+          [ -n "$errors" ] && echo "::error title=Errores::$(printf '%s\n' "$errors" | esc)"
+          wrong=$(awk '/What went wrong/ { f = 1 } /^\* Try:/ { f = 0 } f' ci.log | head -n 40 || true)
+          [ -n "$wrong" ] && echo "::error title=Gradle::$(printf '%s\n' "$wrong" | esc)"
+          echo "::error title=Final del registro::$(tail -n 60 ci.log | esc)"
