@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { TASKS, type LogEntry } from '../../data/eliminator500';
+import { type DoneWhen, parseDoneWhen } from '../../logic/doneWhen';
 import { costOfEntry } from '../../logic/expenses';
-import { formatDate, formatKm } from '../../logic/format';
+import { formatDate, formatKm, todayIso } from '../../logic/format';
 import { formatEuros, parseEuros, sumEuros } from '../../logic/money';
 import { unmountedPurchases } from '../../logic/parts';
 import { describeInterval, isPendingMount, lastEntry, taskStatus } from '../../logic/status';
@@ -35,6 +36,11 @@ export default function TaskScreen() {
   const [cost, setCost] = useState('');
   const [place, setPlace] = useState('');
   const [costError, setCostError] = useState<string | null>(null);
+  // Hecho otro día: se apunta con la fecha y los km de ese día.
+  const [otherDay, setOtherDay] = useState(false);
+  const [dayText, setDayText] = useState(() => formatDate(todayIso()));
+  const [dayKmText, setDayKmText] = useState(() => String(state.km));
+  const [whenError, setWhenError] = useState<string | null>(null);
 
   const task = TASKS.find((t) => t.id === id);
   if (!task) {
@@ -139,10 +145,63 @@ export default function TaskScreen() {
             />
           </View>
           {costError ? <Text style={{ color: c.danger }}>{costError}</Text> : null}
+          {otherDay ? (
+            <View style={{ gap: 8 }}>
+              <Text style={{ color: c.muted, fontSize: 13 }}>Cuándo lo hiciste y los km que tenía la moto ese día</Text>
+              <View style={styles.costRow}>
+                <TextInput
+                  accessibilityLabel="Fecha en que lo hiciste"
+                  placeholder="dd/mm/aaaa"
+                  placeholderTextColor={c.muted}
+                  keyboardType="numbers-and-punctuation"
+                  value={dayText}
+                  onChangeText={(text) => {
+                    setDayText(text);
+                    setWhenError(null);
+                  }}
+                  style={[makeInputStyle(c), styles.costInput]}
+                />
+                <TextInput
+                  accessibilityLabel="Km de ese día"
+                  placeholder="Km"
+                  placeholderTextColor={c.muted}
+                  keyboardType="number-pad"
+                  value={dayKmText}
+                  onChangeText={(text) => {
+                    setDayKmText(text);
+                    setWhenError(null);
+                  }}
+                  style={[makeInputStyle(c), styles.costInput]}
+                />
+              </View>
+              {whenError ? <Text style={{ color: c.danger }}>{whenError}</Text> : null}
+              <View style={{ alignSelf: 'flex-start' }}>
+                <Button
+                  small
+                  kind="ghost"
+                  label="Es de hoy"
+                  onPress={() => {
+                    setOtherDay(false);
+                    setWhenError(null);
+                  }}
+                />
+              </View>
+            </View>
+          ) : (
+            <View style={{ alignSelf: 'flex-start' }}>
+              <Button small kind="ghost" label="Lo hice otro día" onPress={() => setOtherDay(true)} />
+            </View>
+          )}
         </View>
       )}
       <Button
-        label={doneToday ? `Ya registrado a ${formatKm(state.km)}` : `Marcar hecho a ${formatKm(state.km)}`}
+        label={
+          doneToday
+            ? `Ya registrado a ${formatKm(state.km)}`
+            : otherDay
+              ? 'Apuntar como hecho ese día'
+              : `Marcar hecho a ${formatKm(state.km)}`
+        }
         disabled={doneToday}
         onPress={() => {
           const amount = cost.trim() ? parseEuros(cost) : null;
@@ -152,13 +211,27 @@ export default function TaskScreen() {
           if (amount === null && place.trim()) {
             return setCostError('Para apuntar dónde se hizo, escribe también lo que costó (puede ser 0).');
           }
-          markDone(task.id, amount !== null ? { amount, concept: task.name, place } : undefined);
+          let when: DoneWhen | undefined;
+          if (otherDay) {
+            const parsed = parseDoneWhen(dayText, dayKmText, {
+              taskId: task.id,
+              km: state.km,
+              log: state.log,
+              now: new Date(),
+            });
+            if ('error' in parsed) return setWhenError(parsed.error);
+            when = parsed;
+          }
+          markDone(task.id, amount !== null ? { amount, concept: task.name, place } : undefined, when);
           router.back();
         }}
       />
-      <Body muted>
-        Antes de marcarlo, comprueba que los km de la pantalla principal son los del cuentakilómetros.
-      </Body>
+      {otherDay ? null : (
+        <Body muted>
+          Antes de marcarlo, comprueba que los km de la pantalla principal son los del cuentakilómetros. Si lo hiciste
+          otro día, pulsa «Lo hice otro día».
+        </Body>
+      )}
 
       <View style={{ gap: 8 }}>
         <Eyebrow>Historial</Eyebrow>

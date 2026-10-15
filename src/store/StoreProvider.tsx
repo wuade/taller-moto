@@ -3,6 +3,7 @@ import { createContext, type ReactNode, useCallback, useContext, useEffect, useM
 
 import type { LogEntry, TorqueKey } from '../data/eliminator500';
 import { parseBackup } from '../logic/backup';
+import type { DoneWhen } from '../logic/doneWhen';
 import { type ExpenseInput, addExpense, removeExpense, updateExpense } from '../logic/expenses';
 import { todayIso } from '../logic/format';
 import { type AppState, addEntry, importInto, removeEntry, seedState } from '../logic/state';
@@ -14,8 +15,11 @@ type Store = {
   state: AppState;
   saveError: string | null;
   setKm: (km: number) => void;
-  /** Marca un trabajo como hecho con los km actuales; si se indica, apunta también lo que costó. */
-  markDone: (taskId: string, cost?: Pick<ExpenseInput, 'amount' | 'concept' | 'place'>) => void;
+  /**
+   * Marca un trabajo como hecho con los km actuales, o con la fecha y los km de otro día si se indican.
+   * Si se indica, apunta también lo que costó.
+   */
+  markDone: (taskId: string, cost?: Pick<ExpenseInput, 'amount' | 'concept' | 'place'>, when?: DoneWhen) => void;
   deleteEntry: (taskId: string, entry: LogEntry) => void;
   setOverride: (key: TorqueKey, nm: number, source: string) => void;
   addExpense: (input: ExpenseInput) => void;
@@ -79,12 +83,13 @@ export function StoreProvider({ children, fallback }: { children: ReactNode; fal
           const now = new Date();
           return { ...s, km, kmDate: todayIso(now), updated: now.toISOString() };
         }),
-      markDone: (taskId, cost) =>
+      markDone: (taskId, cost, when) =>
         update((s) => {
           const now = new Date();
-          const date = todayIso(now);
-          const done = addEntry(s, taskId, { km: s.km, date }, now);
-          return cost ? addExpense(done, { ...cost, date, km: s.km, taskId }, now) : done;
+          const date = when?.date ?? todayIso(now);
+          const km = when?.km ?? s.km;
+          const done = addEntry(s, taskId, { km, date }, now);
+          return cost ? addExpense(done, { ...cost, date, km, taskId }, now) : done;
         }),
       deleteEntry: (taskId, entry) => update((s) => removeEntry(s, taskId, entry, new Date())),
       setOverride: (key, nm, source) =>

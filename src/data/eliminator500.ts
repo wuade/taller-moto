@@ -168,6 +168,8 @@ export const TORQUE_GROUPS: { title: string; keys: TorqueKey[] }[] = [
 export const BIKE = {
   name: 'Kawasaki Eliminator 500 SE',
   detail: '451 cc · matriculada el 08/04/2025',
+  /** Día de matriculación: ningún trabajo puede ser anterior. */
+  registered: '2025-04-08',
 };
 
 export const TASKS: Task[] = [

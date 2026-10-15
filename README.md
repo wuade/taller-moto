@@ -6,6 +6,7 @@ App para planificar y apuntar el mantenimiento de una Kawasaki Eliminator 500 SE
 
 - **Qué toca**: con los kilómetros actuales, ordena las tareas en vencidas, pronto y al día, por kilómetros o por tiempo. Si hace dos semanas que no apuntas los km, te avisa de que puede ir atrasado.
 - **Pasos con su par**: cada tarea trae herramientas, pasos y el par de apriete de cada tornillo, con su fuente.
+- **Trabajos de otro día**: si no lo apuntaste el mismo día, «Lo hice otro día» lo guarda con su fecha y los km que tenía la moto entonces. Si esos km no cuadran con los de otros trabajos (por ejemplo, falta una cifra), te avisa.
 - **Pares de apriete**: la tabla completa. Cada valor lleva etiqueta: *Oficial*, *Cita del manual*, *Probable* o *Sin dato*. Si confirmas un valor (por ejemplo, con el taller), lo guardas con su fuente; sin fuente no se guarda.
 - **Avisos en el Calendario**: pasa al Calendario del móvil cuándo toca cada trabajo, con aviso una semana antes y el mismo día. Las fechas por km se estiman con tu media de km al día.
 - **Recambios**: referencias de Kawasaki y equivalentes de cada recambio y consumible. Lo que compras se apunta en su recambio, va también a Gastos y queda «sin montar» hasta que marcas el trabajo como hecho.
